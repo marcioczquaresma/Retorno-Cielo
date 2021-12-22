@@ -1,15 +1,11 @@
 # Marcio Quaresma - nov/2021
-# Retorno Cielo 
-# /home/marcio/jornal/Departamentos/Depart.Cobranca/retorno/Cielo/2021/
-
+# Retorno Cielo v.2
 # processa todos os arquivos retorno cielo de um diretorio
 
 import os
 import pandas as pd
 from datetime import datetime
 import cx_Oracle
-#from tqdm import tqdm # barra de progresso
-
 
 log = open('log'+datetime.today().strftime('%Y-%m-%d_%H-%M')+'.txt','w')
 def gravaLog(txt):
@@ -96,10 +92,11 @@ for arq in os.listdir(path):
 
     # Migra Dados para Banco
     # Conecta Banco Oracle
+    conecta = pd.read_csv('conecta.txt')
     con = cx_Oracle.connect(
-        user="SITEF", 
-        password="SYSTEMDELTA", 
-        dsn="20.1.10.201:1521/corp", # produção-> 20.1.10.201   teste-> 20.1.10.121
+        user=conecta.usuario[0], 
+        password=conecta.senha[0], 
+        dsn=conecta.ip[0], 
         encoding="UTF-8")
     c1 = con.cursor() # cria Cursor 1
     c2 = con.cursor() # cria Cursor 2
@@ -177,11 +174,11 @@ for arq in os.listdir(path):
     arquivo.write(arq+'\n')
 arquivo.close()
 gravaLog('arquivos.ret salvo')
-# executa SetNuCLIENTE
+
 con = cx_Oracle.connect(
-    user="SITEF", 
-    password="SYSTEMDELTA", 
-    dsn="20.1.10.201:1521/corp", 
+    user=conecta.usuario[0], 
+    password=conecta.senha[0], 
+    dsn=conecta.ip[0], 
     encoding="UTF-8")
 c1 = con.cursor() # cria Cursor 1
 
