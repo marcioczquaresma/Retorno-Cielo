@@ -3,7 +3,7 @@
 
 #### Sem intervenção manual por meio do canal SFG (Sterling File Gateway)
 
-##### Linguagem: Python3
+##### Linguagem: Python3 
 
-##### Banco de Dados: Oracle
+##### Banco de Dados: Oracle PL/SQL
 
