@@ -72,8 +72,8 @@ def card(x):
     return x[xi:xf]
 
 # Verifica se dado já foi migrado
-def migrado(dtCompensa,autori):
-    sql = "select dtCompen from SITEF.RETORNO_CIELO where dtCompen='"+dtCompensa+"' and codAuto='"+autori+"'"
+def migrado(dtCompensa,autori,sin):
+    sql = "select dtCompen from SITEF.RETORNO_CIELO where dtCompen='"+dtCompensa+"' and codAuto='"+autori+"' and sinal='"+sin+"'"
     c2.execute(sql)
     r2 = c2.fetchone()
     if r2:
@@ -89,10 +89,11 @@ for arq in os.listdir(path):
         # log.write(datetime.today().strftime('%H:%M:%S')+' '+arq + ' processado anteriormente \n')
         continue # ----pula esse----
     # pega arquivo
-    #                -0-         -1-      -0-        -1-       -1-      -1-      -1-      -1-         -1-        -1-       -1-       -1-       -1-       -1-        -1-       -2-         -2-      -2-        -2-       -2-
-    nomes = ['tp',  'estabele', 'numRO', 'dtCompen','parc',   'plan',  'dtPag', 'sinal', 'vlrBruto', 'vlrTaxa', 'vlrLiq', 'banco',  'agencia','conta',  'bandeira','nuUnico','nuCartao','dtVenda','codAuto', 'nsuDoc', 'terminal'] 
-    colun = [(0, 1),(1, 11),    (11, 18),(11, 19),  (18, 20), (21, 23),(31,37), (43, 44),(45, 57),   (63, 71),  (87, 99), (100,103),(104,108),(112,121),(184,187), (188,202),(18, 37),  (37, 45), (66, 72),  (92, 98), (152, 160)] 
+    #                -0-        -9-          -1-      -0-        -1-       -1-      -1-      -1-      -1-         -1-        -1-       -1-       -1-       -1-       -1-        -1-       -2-         -2-      -2-        -2-       -2-
+    nomes = ['tp',  'estabele','registros', 'numRO', 'dtCompen','parc',   'plan',  'dtPag', 'sinal', 'vlrBruto', 'vlrTaxa', 'vlrLiq', 'banco',  'agencia','conta',  'bandeira','nuUnico','nuCartao','dtVenda','codAuto', 'nsuDoc', 'terminal'] 
+    colun = [(0, 1),(1, 11),    (1, 12),     (11, 18),(11, 19),  (18, 20), (21, 23),(31,37), (43, 44),(45, 57),   (63, 71),  (87, 99), (100,103),(104,108),(112,121),(184,187), (188,202),(18, 37),  (37, 45), (66, 72),  (92, 98), (152, 160)] 
     ret   = pd.read_fwf(path+arq, skiprows=0, header=None, names=nomes, colspecs=colun, converters={x:str for x in nomes})
+
     # Migra Dados para Banco
     # Conecta Banco Oracle
     con = cx_Oracle.connect(
@@ -132,6 +133,7 @@ for arq in os.listdir(path):
             else:
                 plan=ret.plan[i]
             continue
+
         if ret.tp[i]=='2':
             lin += 1
             seq=str(lin).zfill(3)
@@ -139,13 +141,16 @@ for arq in os.listdir(path):
             nsuDoc=(ret.nsuDoc[i])
             dtVenda=ret.dtVenda[i]
             terminal=(ret.terminal[i])
-            if migrado(dtCompen,codAuto):
-                gravaLog(arq +' '+ dtCompen +' '+ codAuto + ' processado anteriormente *')
-                continue # ----pula esse----
+
             if pd.isna(ret.nuCartao[i]):
                 nuCartao='taxa_servico'
+                codAuto=seq
             else:
                 nuCartao=card(ret.nuCartao[i])
+            if migrado(dtCompen,codAuto,sinal):
+                gravaLog(arq +' '+ dtCompen +' '+ codAuto + ' processado anteriormente *')
+                continue # ----pula esse----
+
             insSql='insert into SITEF.RETORNO_CIELO( dtCompen,seq,estabele,codAuto,sinal,vlrBruto,vlrTaxa,vlrLiq,nuCartao,parc,plan,numRO,dtPag,dtVenda,banco,agencia,conta,bandeira,nuUnico,nsuDoc,terminal'
             insSql+=') values (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21 )'
             val = ( dtCompen, seq, estabele, codAuto, sinal, vlrBruto, vlrTaxa, vlrLiq, nuCartao, parc, plan, numRO, dtPag, dtVenda, banco, agencia, conta, bandeira, nuUnico, nsuDoc, terminal )
@@ -154,13 +159,11 @@ for arq in os.listdir(path):
             log.write(datetime.today().strftime('%H:%M:%S')+' '+'insert ' + dtCompen +' '+ seq +' '+ estabele +' '+ codAuto +' '+ sinal +' '+ vlr(vlrBruto) + '\n')
             continue
         if ret.tp[i]=='9':
-            linhas=int(ret.estabele[i])
+            linhas=int(ret.registros[i])
             if linhas==0:
-                # print(arq,' vazio')
                 gravaLog(arq + ' vazio')
             else:
-                # print(arq,' processado')
-                gravaLog(arq + ' processado')
+                gravaLog(arq+' processado '+str(linhas).zfill(3)+' linhas')
 
     # Desconecta servidor
     c1.close()
