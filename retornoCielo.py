@@ -1,5 +1,5 @@
 # Marcio Quaresma - nov/2021
-# Retorno Cielo v.2
+# Retorno Cielo v.3
 # processa todos os arquivos retorno cielo de um diretorio
 
 import os
@@ -175,6 +175,7 @@ for arq in os.listdir(path):
 arquivo.close()
 gravaLog('arquivos.ret salvo')
 
+conecta = pd.read_csv('conecta.txt')
 con = cx_Oracle.connect(
     user=conecta.usuario[0], 
     password=conecta.senha[0], 
