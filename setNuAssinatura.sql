@@ -6,7 +6,7 @@ select unique seq,dtCompen,rt.dtVenda,rt.parc,rt.codAuto,rt.vlrBruto, rt.nuClien
   a.nuASSINATURA, r.nuRECEBER, r.tpAtiva
   from SITEF.RETORNO_CIELO rt 
   left join scap.assinatura a on rt.nuCliente = a.nuCliente and a.dtCancelado is null and a.dtFim>to_date(rt.dtCompen,'YYYYMMDD')
-  left join scap.receber r on rt.nuDOCUMENTO = r.nuDocumento and r.nuSufixo=to_number(rt.parc) 
+  left join scap.receber r on a.nuAssinatura = r.nuDocumento and r.nuSufixo=to_number(rt.parc) 
   where sinal='+' and rt.idLAN is null and rt.nuCliente is not null and rt.nuDOCUMENTO is null 
     and r.nuPortador in ( 2,12,13,15,20,21,23,24,25,27,28,29,30,31,42 )
   order by rt.dtCompen, rt.seq
